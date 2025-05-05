@@ -51,10 +51,7 @@ namespace DiscordProxyStart.Servers
             IniFile ini = new IniFile(iniPath);
             if (!File.Exists(iniPath))
             {
-                var firstIni = """
-                    [Config]
-                    Proxy=
-                    """;
+                var firstIni = "[Config]\r\nProxy=";
                 File.WriteAllText(iniPath, firstIni);
 
                 //创建文件

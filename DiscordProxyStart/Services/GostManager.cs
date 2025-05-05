@@ -58,7 +58,7 @@ namespace DiscordProxyStart.Services
                 }
                 catch (Exception ex) 
                 {
-                    SimpleLogger.Instance.Info(@$"[KillExistingGostProcessError]{ex}");
+                    SimpleLogger.Instance.Info($"[KillExistingGostProcessError]{ex}");
                 }
             }
         }
@@ -107,12 +107,10 @@ namespace DiscordProxyStart.Services
             try
             {
                 // 检查TCP端口
-                using (var tcpListener = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port))
-                {
-                    tcpListener.Start();
-                    tcpListener.Stop();
-                    return false;
-                }
+                var tcpListener = new TcpListener(IPAddress.Loopback, port);
+                tcpListener.Start();
+                tcpListener.Stop();
+                return false;
             }
             catch (SocketException)
             {

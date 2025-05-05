@@ -1,14 +1,10 @@
 ﻿using DiscordProxyStart.Services;
 using DiscordProxyStart.Utils;
-using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DiscordProxyStart.Servers
 {
@@ -132,9 +128,15 @@ namespace DiscordProxyStart.Servers
                 if (!string.IsNullOrEmpty(proxy) && copyResult && Directory.Exists(appPath))
                 {
                     SimpleLogger.Instance.Info($"启动进程 {updatePath} ...");
+                    var iniPath = Path.Combine(AppContext.BaseDirectory, "Config.ini");
+                    IniFile ini = new IniFile(iniPath);
+
                     var process = new Process();
                     process.StartInfo.FileName = updatePath;
-                    process.StartInfo.Arguments = $"--processStart {GetPathDiscordName(appPath)} --a=--proxy-server={proxy}";
+                    if (ini.GetValue("Config", "ShowWindow").Equals("false", StringComparison.CurrentCultureIgnoreCase))
+                        process.StartInfo.Arguments = $"--processStart {GetPathDiscordName(appPath)} --a=\"--proxy-server={proxy} --start-minimized\"";
+                    else
+                        process.StartInfo.Arguments = $"--processStart {GetPathDiscordName(appPath)} --a=--proxy-server={proxy}";
                     process.StartInfo.WorkingDirectory = appPath;
                     process.Start();
 
@@ -157,7 +159,7 @@ namespace DiscordProxyStart.Servers
 
             int fullWaitCount = 0;
             //等待窗口出现
-            while (User32.FindWindow("Chrome_WidgetWin_1", "Discord Updater") == 0)
+            while (User32.FindWindow("Chrome_WidgetWin_1", "Discord Updater") == IntPtr.Zero)
             {
                 Task.Delay(100).Wait();
                 fullWaitCount += 100;
@@ -170,7 +172,7 @@ namespace DiscordProxyStart.Servers
 
             SimpleLogger.Instance.Info("[Discord Updater]已创建，准备释放DLL文件");
 
-            while (User32.FindWindow("Chrome_WidgetWin_1", "Discord Updater") > 0) //等待更新窗口销毁
+            while (User32.FindWindow("Chrome_WidgetWin_1", "Discord Updater") != IntPtr.Zero) //等待更新窗口销毁
             {
                 CopyVersionDll(setupPath);
                 Task.Delay(100).Wait();
@@ -190,10 +192,7 @@ namespace DiscordProxyStart.Servers
 
             if (!File.Exists(iniPath))
             {
-                var firstIni = """
-                    [Config]
-                    Proxy=
-                    """;
+                var firstIni = "[Config]\r\nProxy=";
                 File.WriteAllText(iniPath, firstIni);
 
                 //创建文件
